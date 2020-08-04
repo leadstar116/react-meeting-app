@@ -1,19 +1,16 @@
 import React, { useState, ChangeEvent, FormEvent } from 'react'
 import { Link } from 'react-router-dom'
-import { connect } from 'react-redux'
+import { useDispatch, useSelector } from 'react-redux'
 import { userLogin } from '../_helpers/user.thunk'
-import { UserData } from '../_constants/user.interface'
 import { AlertData } from '../_constants/alert.interface'
-import { ThunkDispatch } from 'redux-thunk'
-import { AnyAction } from 'redux'
 
-type Props = {
-    userState: LoginState,
-    alertState: AlertData,
-    handleLogin: (email:string, password: string) => void,
+interface initialState {
+    alertReducer: AlertData
 }
 
-function LoginPage(props: Props) {
+function LoginPage() {
+    const dispatch = useDispatch()
+    const alertState = useSelector((state:initialState) => state.alertReducer)
     const [inputs, setInputs] = useState({
         username: '',
         password: ''
@@ -24,21 +21,22 @@ function LoginPage(props: Props) {
         const { name, value } = e.target as HTMLTextAreaElement
         setInputs(inputs => ({...inputs, [name]: value}))
     }
+
     function handleSubmit(e: FormEvent) {
         e.preventDefault()
         setSubmitted(true)
 
         if(inputs.username && inputs.password) {
-            props.handleLogin(inputs.username, inputs.password)
+            dispatch(userLogin(inputs.username, inputs.password))
         }
     }
-    console.log(props.alertState)
+
     return (
         <div className="col-lg-8 offset-lg-2">
             <h2 className="mb-4">Login</h2>
-            {props.alertState !== undefined &&
-                <div className={props.alertState.alertClass}>
-                    {props.alertState.alertMessage}
+            {alertState !== undefined &&
+                <div className={alertState.alertClass}>
+                    {alertState.alertMessage}
                 </div>
             }
             <form name="form" onSubmit={handleSubmit}>
@@ -69,18 +67,4 @@ function LoginPage(props: Props) {
     )
 }
 
-interface LoginState {
-    isLoggedIn: boolean,
-    user: UserData,
-}
-
-const mapStateToProps = (state: {userReducer: LoginState, alertReducer: AlertData}) => ({
-    userState: state.userReducer,
-    alertState: state.alertReducer
-})
-
-const mapDispatchToProps = (dispatch: ThunkDispatch<any, any, AnyAction>) => ({
-    handleLogin: (email:string, password: string) => dispatch(userLogin(email, password))
-})
-
-export default connect(mapStateToProps, mapDispatchToProps)(LoginPage)
+export default LoginPage
